@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<title>September 2026 Lunch Menu</title>
+<style>
+:root{--pink:#f4d5df;--yellow:#f7edbd;--green:#d9efd9;--blue:#d6e9f4;--purple:#e7dcf2;--border:#222;--done:#d7d7d7}
+*{box-sizing:border-box} body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Helvetica Neue",Arial,sans-serif;background:#f7f7f7;color:#111}
+.wrap{max-width:900px;margin:auto;padding:14px}
+h1{font-size:30px;margin:2px 0 0;font-weight:800} .sub{font-size:14px;color:#555;margin:2px 0 14px}
+.help{background:white;border:1px solid #ddd;border-radius:14px;padding:12px;margin-bottom:12px;font-size:14px}
+button{font:inherit}.reset{border:1px solid #aaa;background:white;border-radius:10px;padding:9px 12px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);border-left:1px solid var(--border);border-top:1px solid var(--border)}
+.dow{font-weight:800;text-align:center;padding:9px 3px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:12px}
+.cell{position:relative;min-height:145px;background:white;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:7px}
+.weekend{background:#fff}
+.blank{background:white}
+.cell.today{box-shadow:inset 0 0 0 3px #111}
+.num{font-weight:800;font-size:18px;padding-right:38px;margin-bottom:2px}
+.done .num{text-decoration:line-through}
+.done{background:var(--done)!important}
+.check{position:absolute;right:6px;top:6px;width:40px;height:40px;border-radius:50%;border:2px solid #555;background:white;font-weight:800;font-size:20px}
+.done .check{background:#111;color:white}
+.section{font-weight:800;font-size:12px;margin-top:3px}.items{font-size:11px;line-height:1.15;margin-bottom:2px}.items div:before{content:"• ";font-weight:800}
+.status{padding:10px 0;color:#555;font-size:14px}
+@media(max-width:650px){
+ .wrap{padding:8px} h1{font-size:24px}.help{font-size:13px}
+ .calendar{grid-template-columns:repeat(7,minmax(70px,1fr));overflow-x:auto}
+ .dow{font-size:10px}.cell{min-height:170px;padding:5px}.num{font-size:15px}.section{font-size:10px}.items{font-size:9px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div><h1>September 2026</h1><div class="sub">Crosby Elementary School • Lunch</div></div><button class="reset" id="reset">Reset</button></div>
+  <div class="help">📱 <b>Tap the ✓</b> on a school day when you're finished. Your checkmarks are saved on this iPhone in this browser.</div>
+  <div class="calendar" id="cal"></div>
+  <div class="status" id="status"></div>
+</div>
+<script>
+const menus={
+1:["Mini Turkey Corn Dogs","Sunbutter & Grape Jelly Sandwich",["Chilled Diced Pears","Baked Beans","Fresh Cherry Tomatoes"]],
+2:["Crispy Chicken Patty Sandwich","Build Your Own Pizza Fun Lunch",["Chilled Peaches","French Fries","Sliced Cucumbers"]],
+3:["Chicken Pasta Alfredo","Sunbutter & Grape Jelly Sandwich",["Applesauce","Mediterranean Chickpeas","Fresh Carrots"]],
+4:["Cheese Pizza","Turkey & Cheese Sandwich",["Fresh Whole Fruit","Fresh Caesar Salad","Seasoned Corn"]],
+8:["Mini French Toast; Pork Sausage Patty","Turkey & Cheese Sandwich",["Cinnamon Diced Pears","Lettuce & Tomato Side Salad","Tater Tots"]],
+9:["Mashed Potato & Chicken Bowl","Muffin, Yogurt & Goldfish Fun Lunch",["Fruit Cocktail","Baked Beans","Fresh Carrots"]],
+10:["Beef Hot Dog on Whole Wheat","Turkey & Cheese on a Bun",["Chilled Peaches","Corn Ranch Salad","Salsa"]],
+11:["Cheese Pizza","Nachos, Cheese, & Salsa Fun Lunch",["Fresh Whole Fruit","Citrus Chickpea Salad","Broccoli Ranch Salad"]],
+14:["Chicken Nuggets; Dinner Roll","Sunbutter & Grape Jelly Sandwich",["Fresh Fuji Apple","Broccoli","Fresh Carrots"]],
+15:["Cheese Stuffed Breadsticks; Marinara Sauce","Ham and Cheese Sandwich",["Chilled Diced Pears","Fresh Caesar Salad","Mediterranean Chickpeas"]],
+16:["Classic American Cheeseburger","Build Your Own Pizza Fun Lunch",["Fruit Cocktail","Fresh Carrots","Crinkle Cut French Fries"]],
+17:["Toasty Cheese Sandwich","Turkey & Cheese on a Bun",["Applesauce","Campbell’s Tomato Soup","Baked Beans"]],
+18:["Cheese Pizza","Sunbutter & Grape Jelly Sandwich",["Fresh Whole Fruit","Corn Ranch Salad","Sliced Cucumbers"]],
+21:["Macaroni and Cheese; Dinner Roll","Ham and Cheese Sandwich",["Chilled Mixed Fruit","Baked Beans","Fresh Broccoli Florets"]],
+22:["French Bread Multi Cheese Garlic Pizza","Mixed Greens Salad with Cheese; Flatbread",["Chilled Peaches","French Fries","Marinated Tomato & Cucumber Salad"]],
+23:["Chicken Tenders","Muffin, Goldfish & Yogurt Fun Lunch",["Fruit Cocktail","Corn & Pepper Salad","Fresh Caesar Salad"]],
+24:["Beef Taco Meat; Shredded Cheddar Cheese; Walking Taco Frito Corn Chips","Turkey & Cheese on a Bun",["Chilled Diced Pears","Citrus Chickpea Salad","Fresh Grape Tomatoes"]],
+25:["Classic Pepperoni Pizza","Sunbutter & Grape Jelly Sandwich",["Fresh Whole Fruit","Broccoli Ranch Salad with Carrots","Sliced Cucumbers"]],
+28:["Classic American Cheeseburger","Ham and Cheese Sandwich",["Fresh Fuji Apple","Fresh Celery Sticks","French Fries"]],
+29:["Mini Turkey Corn Dogs","Sunbutter & Grape Jelly Sandwich",["Chilled Diced Pears","Baked Beans","Fresh Cherry Tomatoes"]],
+30:["Crispy Chicken Patty Sandwich","Build Your Own Pizza Fun Lunch",["Chilled Peaches","French Fries","Sliced Cucumbers"]]
+};
+const oct={
+1:["Chicken Pasta Alfredo","Sunbutter & Grape Jelly Sandwich",["Applesauce","Mediterranean Chickpeas","Fresh Carrots"]],
+2:["Cheese Pizza","Turkey & Cheese Sandwich",["Fresh Whole Fruit","Fresh Caesar Salad","Seasoned Corn"]]
+};
+const days=["SUN","MON","TUE","WED","THU","FRI","SAT"];
+const cal=document.getElementById("cal");
+days.forEach(d=>{let x=document.createElement("div");x.className="dow";x.textContent=d;cal.appendChild(x)});
+let saved=JSON.parse(localStorage.getItem("crosbyLunchDone")||"[]");
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function addCell(day,month,item){
+ let c=document.createElement("div"); c.className="cell";
+ let key=month+day; if(saved.includes(key))c.classList.add("done");
+ let today=(month==="Sep" && day===14); if(today)c.classList.add("today");
+ c.innerHTML=`<div class="num">${month==="Sep"?day:"Oct "+day}${today?" • Today":""}</div>
+ <div class="section">Create</div><div class="items">${item[0].split(";").map(esc).map(x=>`<div>${x}</div>`).join("")}</div>
+ <div class="section">On The Go</div><div class="items"><div>${esc(item[1])}</div></div>
+ <div class="section">Extra Extra</div><div class="items">${item[2].map(esc).map(x=>`<div>${x}</div>`).join("")}</div>
+ <button class="check" aria-label="Mark ${key} complete">✓</button>`;
+ c.querySelector(".check").addEventListener("click",()=>{
+   if(saved.includes(key)) saved=saved.filter(x=>x!==key); else saved.push(key);
+   localStorage.setItem("crosbyLunchDone",JSON.stringify(saved)); c.classList.toggle("done"); update();
+ });
+ cal.appendChild(c);
+}
+const offset=2; for(let i=0;i<offset;i++){let x=document.createElement("div");x.className="cell blank";cal.appendChild(x)}
+for(let d=1;d<=30;d++){if(menus[d])addCell(d,"Sep",menus[d]);else{let x=document.createElement("div");x.className="cell";x.innerHTML=`<div class="num">${d}</div>`;cal.appendChild(x)}}
+addCell(1,"Oct",oct[1]);addCell(2,"Oct",oct[2]);
+function update(){document.getElementById("status").textContent=`${saved.length} school day${saved.length===1?"":"s"} marked complete.`}
+document.getElementById("reset").addEventListener("click",()=>{if(confirm("Clear all checkmarks?")){saved=[];localStorage.removeItem("crosbyLunchDone");document.querySelectorAll(".done").forEach(x=>x.classList.remove("done"));update()}});
+update();
+</script>
+</body>
+</html>
